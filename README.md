@@ -7,6 +7,6 @@ this plugin shows statistics by counting only unique IP addresses on a website
 ![logo.](https://i.imgur.com/8W3jbsP.jpg)
 
 ## Download
-[Download](https://pages.github.com/)
+[Download](https://github.com/multicolor-rgb/easyStats-Plugin-for-bludit-CMS/archive/refs/heads/main.zip)
 
  Soon on repo bludit!
