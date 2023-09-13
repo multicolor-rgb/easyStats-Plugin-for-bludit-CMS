@@ -37,6 +37,8 @@ class easyStats extends Plugin
                 $visitorTimestamp = (int) $visitor->timestamp;
                 $allVisitors[] = $visitorIp;
 
+                
+
                 if ($currentTimestamp - $visitorTimestamp <= 7 * 24 * 60 * 60) {
                     $visitors7Days[] = $visitorIp;
                 }
@@ -99,9 +101,6 @@ class easyStats extends Plugin
         // Get the visitor's IP address
         $ipAddress = $_SERVER['REMOTE_ADDR'];
 
-
-        // Current date and time
-        $currentTimestamp = time();
 
         // Date 30 days back
         $thirtyDaysAgo = strtotime('-30 days');
@@ -197,12 +196,10 @@ class easyStats extends Plugin
     public function pageEnd()
     {
 
-
-
+        $currentTimestamp = time();
         $http_response_code = http_response_code();
 
         if ($http_response_code !== 404) {
-
 
             $visitorsFile = PATH_CONTENT . 'easyStats/visitors.xml';
 
@@ -211,29 +208,20 @@ class easyStats extends Plugin
                 file_put_contents(PATH_CONTENT . 'easyStats/.htaccess', 'Deny from All');
             };
 
-
             // Get the visitor's IP address
             $ipAddress = $_SERVER['REMOTE_ADDR'];
-
             $ipAddress = hash('sha256', $ipAddress);
-
-
-            // Current date and time
-            $currentTimestamp = time();
 
             // Read current visitors from temporary resource file
             $currentVisitors = [];
-
 
             // Check if the visitor exists in the current visitors list and remove it
             if (array_key_exists($ipAddress, $currentVisitors)) {
                 unset($currentVisitors[$ipAddress]);
             }
 
-
             // Add or update information about the current visitor
             $currentVisitors[$ipAddress] = $currentTimestamp;
-
 
             //Read existing visitors from an XML file
             $allVisitors = [];
@@ -285,21 +273,10 @@ class easyStats extends Plugin
             // Get the number of current visitors
             $currentVisitorsCount = count($currentVisitors);
 
-
-
             $pagesFile = PATH_CONTENT . 'easyStats/pagesCount.xml';
-
 
             // Get the current URL
             $currentUrl = $_SERVER['REQUEST_URI'];
-
-            // Get the visitor's IP address
-            $ipAddress = $_SERVER['REMOTE_ADDR'];
-            $ipAddress = hash('sha256', $ipAddress);
-
-
-            // Current date and time
-            $currentTimestamp = time();
 
             // Date 30 days back
             $thirtyDaysAgo = strtotime('-30 days');
@@ -333,6 +310,7 @@ class easyStats extends Plugin
                         $pages[$currentUrl]['unique_visitors'][] = $ipAddress;
                     }
 
+                    // Dodaj bieżący znacznik czasu do tablicy znaczników czasu
                     $pages[$currentUrl]['timestamps'][] = $currentTimestamp;
                 } else {
                     $pages[$currentUrl] = [
@@ -343,13 +321,7 @@ class easyStats extends Plugin
                 }
             }
 
-            // Remove timestamps older than 30 days ago
-            foreach ($pages as $pageUrl => $pageData) {
-                $filteredTimestamps = array_filter($pageData['timestamps'], function ($timestamp) use ($thirtyDaysAgo) {
-                    return $timestamp >= $thirtyDaysAgo;
-                });
-                $pages[$pageUrl]['timestamps'] = $filteredTimestamps;
-            }
+       
 
             // Update the XML file with information about visited pages
             $xml = new SimpleXMLElement('<pages></pages>');
@@ -368,6 +340,6 @@ class easyStats extends Plugin
             });
 
             $top100Pages = $pages;
-        };
+        }
     }
 }
