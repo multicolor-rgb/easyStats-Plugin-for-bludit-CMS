@@ -37,7 +37,7 @@ class easyStats extends Plugin
                 $visitorTimestamp = (int) $visitor->timestamp;
                 $allVisitors[] = $visitorIp;
 
-                
+
 
                 if ($currentTimestamp - $visitorTimestamp <= 7 * 24 * 60 * 60) {
                     $visitors7Days[] = $visitorIp;
@@ -256,7 +256,7 @@ class easyStats extends Plugin
                 foreach ($allVisitors as $visitorIp) {
                     $visitor = $xml->addChild('visitor');
                     $visitor->addChild('ip', $visitorIp);
-                    $visitor->addChild('timestamp', $currentTimestamp);
+                    $visitor->addChild('timestamp', $visitorTimestamp);
                 }
                 $newVisitor = $xml->addChild('visitor');
                 $newVisitor->addChild('ip', $ipAddress);
@@ -321,7 +321,7 @@ class easyStats extends Plugin
                 }
             }
 
-       
+
 
             // Update the XML file with information about visited pages
             $xml = new SimpleXMLElement('<pages></pages>');
