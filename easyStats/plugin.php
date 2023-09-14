@@ -29,6 +29,7 @@ class easyStats extends Plugin
         $visitors7Days = [];
         $visitors30Days = [];
         $visitors24Hours = [];
+        $visitors5Minutes = [];
 
         if (file_exists($visitorsFile)) {
             $xml = simplexml_load_file($visitorsFile);
@@ -50,6 +51,10 @@ class easyStats extends Plugin
                 if ($currentTimestamp - $visitorTimestamp <= 24 * 60 * 60) {
                     $visitors24Hours[] = $visitorIp;
                 }
+
+                if ($currentTimestamp - $visitorTimestamp <= 5 * 60) {
+                    $visitors5Minutes[] = $visitorIp;
+                }
             }
         }
 
@@ -58,6 +63,7 @@ class easyStats extends Plugin
         $uniqueVisitors7Days = count(array_unique($visitors7Days));
         $uniqueVisitors30Days = count(array_unique($visitors30Days));
         $uniqueVisitors24Hours = count(array_unique($visitors24Hours));
+        $uniqueVisitors5Minutes = count(array_unique($visitors5Minutes));
 
         // Get the number of current visitors
         $currentVisitorsCount = count($currentVisitors);
@@ -79,6 +85,7 @@ class easyStats extends Plugin
         $html .=  "<tr><td>Unique user from last 30 days: $uniqueVisitors30Days</tr></td>";
         $html .=  "<tr><td>Unique user from last 7 days: $uniqueVisitors7Days</tr></td>";
         $html .=  "<tr><td>Unique user from last 24hours: $uniqueVisitors24Hours </tr></td>";
+        $html .= "<tr><td>Unique user from last 5 minutes:" . $uniqueVisitors5Minutes . "</tr></td>";
         $html .=  '</table>';
 
 
@@ -155,10 +162,10 @@ class easyStats extends Plugin
   new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Unique user All the time', 'Unique user from last 30 days:', 'Unique user from last 7 days:','Unique user from last 24hours'],
+      labels: ['Unique user All the time', 'Unique user last 30 days:', 'Unique user last 7 days:','Unique user last 24hours','Unique user last 5 minutes'],
       datasets: [{
         label: 'Views on website',
-        data: [$uniqueAllVisitors,$uniqueVisitors30Days,$uniqueVisitors7Days,$uniqueVisitors24Hours],
+        data: [$uniqueAllVisitors,$uniqueVisitors30Days,$uniqueVisitors7Days,$uniqueVisitors24Hours,$uniqueVisitors5Minutes],
         borderWidth: 1
       }]
     },
@@ -206,16 +213,23 @@ class easyStats extends Plugin
             if (!is_dir(PATH_CONTENT . 'easyStats/')) {
                 mkdir(PATH_CONTENT . 'easyStats/', 0755);
                 file_put_contents(PATH_CONTENT . 'easyStats/.htaccess', 'Deny from All');
+                file_put_contents(PATH_CONTENT . 'easyStats/visitors.xml', '<?xml version="1.0"?>
+                <visitors></visitors>
+                ');
             };
+
 
             // Get the visitor's IP address
             $ipAddress = $_SERVER['REMOTE_ADDR'];
             $ipAddress = hash('sha256', $ipAddress);
 
-            // Read current visitors from temporary resource file
+            // Current date and time
+            $currentTimestamp = time();
+
+            // Read current visitors from a temporary file
             $currentVisitors = [];
 
-            // Check if the visitor exists in the current visitors list and remove it
+            // Check if the visitor exists in the list of current visitors and remove them
             if (array_key_exists($ipAddress, $currentVisitors)) {
                 unset($currentVisitors[$ipAddress]);
             }
@@ -223,7 +237,7 @@ class easyStats extends Plugin
             // Add or update information about the current visitor
             $currentVisitors[$ipAddress] = $currentTimestamp;
 
-            //Read existing visitors from an XML file
+            // Read existing visitors from an XML file
             $allVisitors = [];
             $visitors7Days = [];
             $visitors30Days = [];
@@ -250,14 +264,9 @@ class easyStats extends Plugin
                 }
             }
 
-            // Adding a new visitor to the XML file
+            // Add a new visitor to the XML file
             if (!in_array($ipAddress, $allVisitors)) {
-                $xml = new SimpleXMLElement('<visitors></visitors>');
-                foreach ($allVisitors as $visitorIp) {
-                    $visitor = $xml->addChild('visitor');
-                    $visitor->addChild('ip', $visitorIp);
-                    $visitor->addChild('timestamp', $visitorTimestamp);
-                }
+                $xml = simplexml_load_file($visitorsFile);
                 $newVisitor = $xml->addChild('visitor');
                 $newVisitor->addChild('ip', $ipAddress);
                 $newVisitor->addChild('timestamp', $currentTimestamp);
@@ -270,7 +279,7 @@ class easyStats extends Plugin
             $uniqueVisitors30Days = count(array_unique($visitors30Days));
             $uniqueVisitors24Hours = count(array_unique($visitors24Hours));
 
-            // Get the number of current visitors
+            // Get the current number of visitors
             $currentVisitorsCount = count($currentVisitors);
 
             $pagesFile = PATH_CONTENT . 'easyStats/pagesCount.xml';
@@ -278,10 +287,17 @@ class easyStats extends Plugin
             // Get the current URL
             $currentUrl = $_SERVER['REQUEST_URI'];
 
-            // Date 30 days back
+            // Get the visitor's IP address
+            $ipAddress = $_SERVER['REMOTE_ADDR'];
+            $ipAddress = hash('sha256', $ipAddress);
+
+            // Current date and time
+            $currentTimestamp = time();
+
+            // Date 30 days ago
             $thirtyDaysAgo = strtotime('-30 days');
 
-            //Read existing visited pages from an XML file
+            // Read existing visited pages from an XML file
             $pages = [];
             if (file_exists($pagesFile)) {
                 $xml = simplexml_load_file($pagesFile);
@@ -301,7 +317,7 @@ class easyStats extends Plugin
             // Check if the current URL contains "?search="
             $isSearchPage = strpos($currentUrl, '?search=') !== false;
 
-            // Increment the visit counter and unique visits for the current page (if it is not a search page)
+            // Increase the visit and unique visitor count for the current page (if it's not a search page)
             if (!$isSearchPage) {
                 if (array_key_exists($currentUrl, $pages)) {
                     $pages[$currentUrl]['visits']++;
@@ -310,7 +326,6 @@ class easyStats extends Plugin
                         $pages[$currentUrl]['unique_visitors'][] = $ipAddress;
                     }
 
-                    // Dodaj bieżący znacznik czasu do tablicy znaczników czasu
                     $pages[$currentUrl]['timestamps'][] = $currentTimestamp;
                 } else {
                     $pages[$currentUrl] = [
@@ -320,8 +335,6 @@ class easyStats extends Plugin
                     ];
                 }
             }
-
-
 
             // Update the XML file with information about visited pages
             $xml = new SimpleXMLElement('<pages></pages>');
@@ -334,11 +347,12 @@ class easyStats extends Plugin
             }
             $xml->asXML($pagesFile);
 
-            // Sort pages by number of visits in reverse order
+            // Sort pages by visit count in descending order
             uasort($pages, function ($a, $b) {
                 return $b['visits'] <=> $a['visits'];
             });
 
+            // Get a list of the top 100 most visited pages in the last 30 days
             $top100Pages = $pages;
         }
     }
