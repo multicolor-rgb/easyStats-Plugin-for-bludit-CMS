@@ -29,6 +29,7 @@ class easyStats extends Plugin
         $visitors7Days = [];
         $visitors30Days = [];
         $visitors24Hours = [];
+        $visitors1Hour = [];
         $visitors5Minutes = [];
 
         if (file_exists($visitorsFile)) {
@@ -55,6 +56,10 @@ class easyStats extends Plugin
                 if ($currentTimestamp - $visitorTimestamp <= 5 * 60) {
                     $visitors5Minutes[] = $visitorIp;
                 }
+
+                if ($currentTimestamp - $visitorTimestamp <= 60 * 60) { // Visitors from the last hour
+                    $visitors1Hour[] = $visitorIp;
+                }
             }
         }
 
@@ -64,6 +69,7 @@ class easyStats extends Plugin
         $uniqueVisitors30Days = count(array_unique($visitors30Days));
         $uniqueVisitors24Hours = count(array_unique($visitors24Hours));
         $uniqueVisitors5Minutes = count(array_unique($visitors5Minutes));
+        $uniqueVisitors1Hour = count(array_unique($visitors1Hour));
 
         // Get the number of current visitors
         $currentVisitorsCount = count($currentVisitors);
@@ -77,7 +83,9 @@ class easyStats extends Plugin
     <b>this plugin shows statistics by counting only unique IP addresses on a website</b>
     </div>
 
-    <div class='bg-light border p-2'><h2>Newest Stats</h2></div>
+    <div class='bg-light border p-2 d-flex justify-content-between align-items-center'><h2>Newest Stats</h2>
+    <a href='?resetcount' onclick='return confirm(`are you sure?`)' class='btn btn-primary'>Reset whole counter to zero 😎</a>
+    </div>
     ";
         $html .=  '<table class="table">';
 
@@ -85,6 +93,7 @@ class easyStats extends Plugin
         $html .=  "<tr><td>Unique user from last 30 days: $uniqueVisitors30Days</tr></td>";
         $html .=  "<tr><td>Unique user from last 7 days: $uniqueVisitors7Days</tr></td>";
         $html .=  "<tr><td>Unique user from last 24hours: $uniqueVisitors24Hours </tr></td>";
+        $html .= "<tr><td>Unique user from last 1 hour: $uniqueVisitors1Hour</tr></td>";
         $html .= "<tr><td>Unique user from last 5 minutes:" . $uniqueVisitors5Minutes . "</tr></td>";
         $html .=  '</table>';
 
@@ -162,10 +171,10 @@ class easyStats extends Plugin
   new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Unique user All the time', 'Unique user last 30 days:', 'Unique user last 7 days:','Unique user last 24hours','Unique user last 5 minutes'],
+      labels: ['Unique user All the time', 'Unique user last 30 days:', 'Unique user last 7 days:','Unique user last 24hours','Unique user last 1 hour','Unique user last 5 minutes'],
       datasets: [{
         label: 'Views on website',
-        data: [$uniqueAllVisitors,$uniqueVisitors30Days,$uniqueVisitors7Days,$uniqueVisitors24Hours,$uniqueVisitors5Minutes],
+        data: [$uniqueAllVisitors,$uniqueVisitors30Days,$uniqueVisitors7Days,$uniqueVisitors24Hours,$uniqueVisitors1Hour,$uniqueVisitors5Minutes],
         borderWidth: 1
       }]
     },
@@ -188,6 +197,16 @@ class easyStats extends Plugin
 </div>';
 
         return $html;
+    }
+
+    public function adminController()
+    {
+
+        if (isset($_GET['resetcount'])) {
+            unlink(PATH_CONTENT . 'easyStats/visitors.xml');
+            unlink(PATH_CONTENT . 'easyStats/pagesCount.xml');
+            echo '<META HTTP-EQUIV="Refresh" Content="0; URL=' . DOMAIN_ADMIN . 'plugin/easystats">';
+        };
     }
 
     public function adminSidebar()
@@ -213,6 +232,10 @@ class easyStats extends Plugin
             if (!is_dir(PATH_CONTENT . 'easyStats/')) {
                 mkdir(PATH_CONTENT . 'easyStats/', 0755);
                 file_put_contents(PATH_CONTENT . 'easyStats/.htaccess', 'Deny from All');
+            };
+
+
+            if (!file_exists($visitorsFile)) {
                 file_put_contents(PATH_CONTENT . 'easyStats/visitors.xml', '<?xml version="1.0"?>
                 <visitors></visitors>
                 ');
@@ -279,7 +302,7 @@ class easyStats extends Plugin
             $uniqueVisitors30Days = count(array_unique($visitors30Days));
             $uniqueVisitors24Hours = count(array_unique($visitors24Hours));
 
-            // Get the current number of visitors
+            // Get the current number of a
             $currentVisitorsCount = count($currentVisitors);
 
             $pagesFile = PATH_CONTENT . 'easyStats/pagesCount.xml';
