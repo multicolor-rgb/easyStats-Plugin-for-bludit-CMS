@@ -155,7 +155,7 @@ class easyStats extends Plugin
 
         $html .=  '<table class="table">';
         foreach ($top100Pages as $url => $pageData) {
-            $html .= "<tr><td><b>" . $url . "</b>- unique Views: " . count($pageData['unique_visitors']) . "</td></tr>";
+            $html .= "<tr><td><b>" .  urldecode($url) . "</b>- unique Views: " . count($pageData['unique_visitors']) . "</td></tr>";
         }
 
         $html .= "</table>
