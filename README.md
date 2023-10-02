@@ -18,7 +18,7 @@ this plugin shows statistics by counting only unique IP addresses on a website
 
 
 ### 2.1
--Added url encode to utf on most viewed page
+- Added url encode to utf on most viewed page
 
 [Download](https://github.com/multicolor-rgb/easyStats-Plugin-for-bludit-CMS/archive/refs/heads/2.1.zip)
 
