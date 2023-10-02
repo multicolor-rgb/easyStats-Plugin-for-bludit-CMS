@@ -11,8 +11,8 @@ this plugin shows statistics by counting only unique IP addresses on a website
 [Download](https://github.com/multicolor-rgb/easyStats-Plugin-for-bludit-CMS/archive/refs/heads/main.zip)
 
 ### 2.0
--Added reset count button
--Added unique visits per 1 hour
+- Added reset count button
+- Added unique visits per 1 hour
 [Download](https://github.com/multicolor-rgb/easyStats-Plugin-for-bludit-CMS/archive/refs/heads/2.0.zip)
 
 
